@@ -29,4 +29,4 @@ def get_by_prefix(db_schema, table_name, column_name, prefix):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0")
