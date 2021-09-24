@@ -35,8 +35,8 @@ def get_users():
     rsp = Response(json.dumps(res), status=200, content_type="application/json")
     return rsp
 
-@app.route('/users/<id>')
-def get_users_by_id(id):
+# @app.route('/users/<id>')
+# def get_users_by_id(id):
 
 
 
