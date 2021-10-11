@@ -4,6 +4,7 @@ import os
 import pandas as pd
 
 from application_services.imdb_artists_resource import IMDBArtistResource
+from application_services.recommendation_service import recommendationResource
 from middleware.context import get_db_info
 from flask import Flask, render_template, request, Response
 from flask_cors import CORS
@@ -58,33 +59,7 @@ def get_suggestions():
 app = Flask(__name__)
 CORS(app)
 
-
-@app.route('/')
-def hello_world():
-    temp = get_db_info()
-    return 'Hello World!'
-
-
-@app.route('/imdb/artists/<prefix>')
-def get_artists_by_prefix(prefix):
-    res = IMDBArtistResource.get_by_name_prefix(prefix)
-    rsp = Response(json.dumps(res), status=200, content_type="application/json")
-    return rsp
-
-
-@app.route('/<db_schema>/<table_name>/<column_name>/<prefix>')
-def get_by_prefix(db_schema, table_name, column_name, prefix):
-    res = d_service.get_by_prefix(db_schema, table_name, column_name, prefix)
-    rsp = Response(json.dumps(res), status=200, content_type="application/json")
-    return rsp
-
-@app.route('/users')
-def get_users():
-    res = d_service.get_full_resource("demo_flask", "user")
-    rsp = Response(json.dumps(res), status=200, content_type="application/json")
-    return rsp
-
-@app.route("/similarity", methods=["POST"])
+@app.route("/similarity", methods=["GET"])
 def similarity():
     movie = request.form['name']
     rc = rcmd(movie)
@@ -93,6 +68,39 @@ def similarity():
     else:
         m_str="---".join(rc)
         return m_str
+
+@app.route("/recommendations", methods=["GET"])
+def recommendations():
+    res = recommendationResource.get_all()
+    rsp = Response(json.dumps(res), status=200, content_type='application/json')
+    return rsp
+
+@app.route("/recommendations/<userID>", methods=["GET", "POST"])
+def recommendations_userID(userID):
+    if request.method == "GET":
+        res = recommendationResource.get_by_id(userID)
+        if len(res) != 0:
+            rsp = Response(json.dumps(res), status=200, content_type='application/json')
+        else:
+            rsp = Response("User not found", status=404, content_type='text/plain')
+        return rsp
+    else:
+        try:
+            body = request.get_json()
+            res = recommendationResource.add_recomendation(body)
+            rsp = Response("Created!", status=201, content_type='application/json')
+            return rsp
+        except:
+            rsp = Response("Error on POST", status=400, content_type='text/plain')
+            return rsp
+
+@app.route("/recommendations/<userID>/swipedYes", methods=["GET"])
+def recommendations_swiped(userID):
+    res = recommendationResource.get_by_swiped(userID)
+    rsp = Response(json.dumps(res), status=200, content_type='application/json')
+    return rsp
+
+
 
 
 if __name__ == '__main__':
