@@ -11,7 +11,7 @@ CORS(app)
 @app.route("/similarity", methods=["GET"])
 def similarity():
     movieTitle = request.form['name']
-    recs = recommendationResource.recommend(movieTitle)
+    recs = recommendationResource.recommend_by_title(movieTitle)
     return recs
 
 
