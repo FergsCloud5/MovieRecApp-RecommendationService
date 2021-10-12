@@ -1,11 +1,47 @@
+import os
+import pandas as pd
+
 from application_services.BaseApplicationResource import BaseApplicationResource
 from database_services.RDBService import RDBService
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
+
+def create_similarity():
+    here = os.path.dirname(os.path.abspath(__file__))
+    data_file = os.path.join(here, "../main_data.csv")
+    data = pd.read_csv(data_file)
+    # creating a count matrix
+    cv = CountVectorizer()
+    count_matrix = cv.fit_transform(data['comb'])
+    # creating a similarity score matrix
+    similarity = cosine_similarity(count_matrix)
+    return data, similarity
 
 class recommendationResource(BaseApplicationResource):
 
+    data, similarity = create_similarity()
+
     def __init__(self):
         super().__init__()
+
+    @classmethod
+    def recommend(cls, movieTitle):
+        movieTitle = movieTitle.lower()
+        if movieTitle not in cls.data['movie_title'].unique():
+            return (
+                'Sorry! The movie you requested is not in our database. Please check the spelling or try with some other movies')
+        else:
+            i = cls.data.loc[cls.data['movie_title'] == movieTitle].index[0]
+            lst = list(enumerate(cls.similarity[i]))
+            lst = sorted(lst, key=lambda x: x[1], reverse=True)
+            lst = lst[1:11]  # excluding first item since it is the requested movie itself
+            l = []
+            for i in range(len(lst)):
+                a = lst[i][0]
+                l.append(cls.data['movie_title'][a])
+            return {'movie': movieTitle,
+                    'recommendations': l}
 
     @classmethod
     def get_all(cls):
