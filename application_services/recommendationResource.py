@@ -26,7 +26,7 @@ class recommendationResource(BaseApplicationResource):
         super().__init__()
 
     @classmethod
-    def recommend(cls, movieTitle):
+    def recommend_by_title(cls, movieTitle):
         movieTitle = movieTitle.lower()
         if movieTitle not in cls.data['movie_title'].unique():
             return (
@@ -42,8 +42,30 @@ class recommendationResource(BaseApplicationResource):
                 a = lst[i][0]
                 l.append({'movieTitle': cls.data['movie_title'][a],
                           'movieID': cls.data['movie_id'][a]})
+
             return {'movie': movieTitle,
                     'movieID': cls.data['movie_id'][orig_index],
+                    'recommendations': l}
+
+    @classmethod
+    def recommend_by_id(cls, movieID):
+        if movieID not in cls.data['movie_id'].unique():
+            return (
+                'Sorry! The movie you requested is not in our database. Please check the spelling or try with some other movies')
+        else:
+            i = cls.data.loc[cls.data['movie_id'] == movieID].index[0]
+            lst = list(enumerate(cls.similarity[i]))
+            lst = sorted(lst, key=lambda x: x[1], reverse=True)
+            orig_index = lst[0][0]
+            lst = lst[1:11]  # excluding first item since it is the requested movie itself
+            l = []
+            for i in range(len(lst)):
+                a = lst[i][0]
+                l.append({'movieTitle': cls.data['movie_title'][a],
+                          'movieID': cls.data['movie_id'][a]})
+
+            return {'movie': cls.data['movie_title'][orig_index],
+                    'movieID': movieID,
                     'recommendations': l}
 
     @classmethod
