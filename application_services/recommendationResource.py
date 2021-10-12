@@ -18,8 +18,8 @@ def create_similarity():
     similarity = cosine_similarity(count_matrix)
     return data, similarity
 
-class recommendationResource(BaseApplicationResource):
 
+class recommendationResource(BaseApplicationResource):
     data, similarity = create_similarity()
 
     def __init__(self):
@@ -35,12 +35,15 @@ class recommendationResource(BaseApplicationResource):
             i = cls.data.loc[cls.data['movie_title'] == movieTitle].index[0]
             lst = list(enumerate(cls.similarity[i]))
             lst = sorted(lst, key=lambda x: x[1], reverse=True)
+            orig_index = lst[0][0]
             lst = lst[1:11]  # excluding first item since it is the requested movie itself
             l = []
             for i in range(len(lst)):
                 a = lst[i][0]
-                l.append(cls.data['movie_title'][a])
+                l.append({'movieTitle': cls.data['movie_title'][a],
+                          'movieID': cls.data['movie_id'][a]})
             return {'movie': movieTitle,
+                    'movieID': cls.data['movie_id'][orig_index],
                     'recommendations': l}
 
     @classmethod
