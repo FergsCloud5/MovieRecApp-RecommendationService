@@ -29,8 +29,7 @@ class recommendationResource(BaseApplicationResource):
     def recommend_by_title(cls, movieTitle):
         movieTitle = movieTitle.lower()
         if movieTitle not in cls.data['movie_title'].unique():
-            return (
-                'Sorry! The movie you requested is not in our database. Please check the spelling or try with some other movies')
+            raise LookupError("Cannot find a movie matching this title, try again.")
         else:
             i = cls.data.loc[cls.data['movie_title'] == movieTitle].index[0]
             lst = list(enumerate(cls.similarity[i]))
@@ -50,8 +49,7 @@ class recommendationResource(BaseApplicationResource):
     @classmethod
     def recommend_by_id(cls, movieID):
         if movieID not in cls.data['movie_id'].unique():
-            return (
-                'Sorry! The movie you requested is not in our database. Please check the spelling or try with some other movies')
+            raise LookupError("Cannot find a movie matching this id, try again.")
         else:
             i = cls.data.loc[cls.data['movie_id'] == movieID].index[0]
             lst = list(enumerate(cls.similarity[i]))
