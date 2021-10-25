@@ -6,6 +6,9 @@ from database_services.RDBService import RDBService
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+# defining global constants SQL access
+REC_SCHEMA = "recommendation_service"
+REC_TABLE  = "recommendations"
 
 def create_similarity():
     here = os.path.dirname(os.path.abspath(__file__))
@@ -68,19 +71,23 @@ class recommendationResource(BaseApplicationResource):
 
     @classmethod
     def get_all(cls):
-        return RDBService.get_full_resource("recommendation_service", "recommendations")
+        return RDBService.get_full_resource(REC_SCHEMA, REC_TABLE)
 
     @classmethod
     def get_by_id(cls, id):
-        return RDBService.find_by_template("recommendation_service", "recommendations",
+        return RDBService.find_by_template(REC_SCHEMA, REC_TABLE,
                                            {"userID": id})
 
     @classmethod
     def get_by_swiped(cls, id):
-        return RDBService.find_by_template("recommendation_service", "recommendations",
+        return RDBService.find_by_template(REC_SCHEMA, REC_TABLE,
                                            {"userID": id, "swipedYes": 1})
 
     @classmethod
     def add_recomendation(cls, recommendation):
-        return RDBService.create("recommendation_service", "recommendations",
+        return RDBService.create(REC_SCHEMA, REC_TABLE,
                                  recommendation)
+
+    @classmethod
+    def find_by_template(cls, template):
+        return RDBService.find_by_template(REC_SCHEMA, REC_TABLE, template)
