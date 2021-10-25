@@ -9,10 +9,21 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-app = Flask(__name__)
-CORS(app)
+application  = Flask(__name__)
+CORS(application)
 
-@app.route("/similarity", methods=["GET"])
+
+@application.before_request
+def before_request():
+    print("This is the request path:", request.path)
+    return
+
+@application.route("/", methods=["GET"])
+def home():
+    return "Hello, welcome to the recommendation service!"
+
+
+@application.route("/similarity", methods=["GET"])
 def similarity():
 
     movieID = request.args.get("movieID", None)
@@ -37,7 +48,7 @@ def similarity():
 
 
 
-@app.route("/recommendations", methods=["GET"])
+@application.route("/recommendations", methods=["GET"])
 def recommendations():
     try:
         res = recommendationResource.get_all()
@@ -47,7 +58,7 @@ def recommendations():
         return Response(str(e), status=500, content_type='text/plain')
 
 
-@app.route("/recommendations/<userID>", methods=["GET", "POST"])
+@application.route("/recommendations/<userID>", methods=["GET", "POST"])
 def recommendations_userID(userID):
     try:
         if request.method == "GET":
@@ -68,7 +79,7 @@ def recommendations_userID(userID):
         return Response(str(e), status=400, content_type='text/plain')
 
 
-@app.route("/recommendations/<userID>/swipedYes", methods=["GET"])
+@application.route("/recommendations/<userID>/swipedYes", methods=["GET"])
 def recommendations_swiped(userID):
     try:
         check = recommendationResource.get_by_id(userID)
@@ -85,4 +96,4 @@ def recommendations_swiped(userID):
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0")
+    application.run(host="0.0.0.0")

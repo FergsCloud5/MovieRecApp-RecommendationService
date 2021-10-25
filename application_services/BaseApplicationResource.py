@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseApplicationExcetion:
+class BaseApplicationException:
 
     def __init__(self):
         pass
