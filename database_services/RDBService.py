@@ -65,6 +65,7 @@ class RDBService:
 
         terms = []
         args = []
+        pagination_str = ""
         clause = None
 
         if template is None or template == {}:
@@ -72,22 +73,42 @@ class RDBService:
             args = None
         else:
             for k, v in template.items():
-                terms.append(k + "=%s")
-                args.append(v)
 
-            clause = " where " + " AND ".join(terms)
+                if k in ["offset", "limit"]:
+                    pagination_str += k + " " + v + " "
+                else:
+                    terms.append(k + "=%s")
+                    args.append(v)
+
+            if len(terms) == 0:
+                clause = " " + pagination_str
+            else:
+                clause = " where " + " AND ".join(terms) + " " + pagination_str
 
         return clause, args
 
     @classmethod
     def find_by_template(cls, db_schema, table_name, template):
 
+        # set up default params
+        default_pagination = {'fields': "*",
+                              'limit': '20',
+                              'offset': '0'}
+
+        # add terms with "fields", "limit", or "offset" before trying to find where clause
+        for key in ["limit", "offset"]:
+            if key not in template.keys():
+                template[key] = default_pagination[key]
+
+        fields = template.get("fields", "*")
+        template.pop("fields", None)
+
         wc, args = RDBService.get_where_clause_args(template)
 
         conn = RDBService._get_db_connection()
         cur = conn.cursor()
 
-        sql = "select * from " + db_schema + "." + table_name + " " + wc
+        sql = "select " + fields + " from " + db_schema + "." + table_name + " " + wc
         res = cur.execute(sql, args=args)
         res = cur.fetchall()
 
@@ -115,3 +136,38 @@ class RDBService:
 
         res = RDBService.run_sql(sql_stmt, args)
         return res
+
+    @classmethod
+    def get_prev_attributes(cls, template):
+
+        attributes = {}
+
+        # if no offset given, we have result starting at first resource, no previous page
+        if template.get("offset", 0) == 0:
+            attributes["offset"] = None
+            attributes["limit"] = None
+            return attributes
+        # if offset exists, but it is smaller than the limit
+        # return the offset = 0, limit = limit (or 20, by default)
+        elif int(template.get("offset", 0)) <= int(template.get("limit", 20)):
+            attributes["offset"] = 0
+            attributes["limit"] = int(template.get("limit", 20))
+            return attributes
+        else:
+            # otherwise we have a regular previous page, add limit to offset and give next page
+            # ex: If we have offset = 10, limit = 10, next page is:
+            #                offset = 20, limit = 10
+            #                ^ here we add limit (10) to the offset and keep limit as is
+            attributes["offset"] = int(template.get("offset", 0)) - int(template.get("limit", 20))
+            attributes["limit"] = int(template.get("limit", 20))
+
+            return attributes
+
+    @classmethod
+    def get_next_attributes(cls, template):
+
+        attributes = {"offset": int(template.get("offset", 0)) + int(template.get("limit", 20)),
+                      "limit": int(template.get("limit", 20))
+                      }
+
+        return attributes
