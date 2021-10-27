@@ -84,10 +84,19 @@ class recommendationResource(BaseApplicationResource):
                                            {"userID": id, "swipedYes": 1})
 
     @classmethod
-    def add_recomendation(cls, recommendation):
+    def add_recommendation(cls, recommendation):
         return RDBService.create(REC_SCHEMA, REC_TABLE,
                                  recommendation)
 
     @classmethod
     def find_by_template(cls, template):
+        template = dict(template)
         return RDBService.find_by_template(REC_SCHEMA, REC_TABLE, template)
+
+    @classmethod
+    def get_prev_attributes(cls, template):
+        return RDBService.get_prev_attributes(template)
+
+    @classmethod
+    def get_next_attributes(cls, template):
+        return RDBService.get_next_attributes(template)
