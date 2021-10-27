@@ -51,7 +51,8 @@ def similarity():
 @application.route("/recommendations", methods=["GET"])
 def recommendations():
     try:
-        res = recommendationResource.get_all()
+        #res = recommendationResource.get_all()
+        res = recommendationResource.find_by_template(request.args)
         return Response(json.dumps(res), status=200, content_type='application/json')
     except Exception as e:
         logger.error("Error on /recommendations: ", str(e))
@@ -72,7 +73,7 @@ def recommendations_userID(userID):
         # otherwise we want a post
         elif request.method == "POST":
             body = request.get_json()
-            res = recommendationResource.add_recomendation(body)
+            res = recommendationResource.add_recommendation(body)
             return Response("Created!", status=201, content_type='text/plain')
     except Exception as e:
         logger.error("Error on /recommendations/<userID>", str(e))
