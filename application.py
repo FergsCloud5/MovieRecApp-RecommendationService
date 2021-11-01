@@ -51,9 +51,12 @@ def similarity():
 @application.route("/recommendations", methods=["GET"])
 def recommendations():
     try:
-        #res = recommendationResource.get_all()
-        res = recommendationResource.find_by_template(request.args)
-        return Response(json.dumps(res), status=200, content_type='application/json')
+        data = recommendationResource.find_by_template(request.args)
+        response = recommendationResource.construct_response(data,
+                                                             request.args,
+                                                             request.path,
+                                                             request.full_path)
+        return Response(json.dumps(response), status=200, content_type='application/json')
     except Exception as e:
         logger.error("Error on /recommendations: ", str(e))
         return Response(str(e), status=500, content_type='text/plain')
@@ -63,18 +66,19 @@ def recommendations():
 def recommendations_userID(userID):
     try:
         if request.method == "GET":
-            res = recommendationResource.get_by_id(userID)
-            if len(res) == 0:
-                return Response("User not found", status=404, content_type='text/plain')
+            data = recommendationResource.get_by_id(userID)
+            if len(data) == 0:
+                return Response(status=404, content_type='text/plain')
 
             # if we get here, we found a user
-            return Response(json.dumps(res), status=200, content_type='application/json')
+            response = {"data": data}
+            return Response(json.dumps(response), status=200, content_type='application/json')
 
         # otherwise we want a post
         elif request.method == "POST":
             body = request.get_json()
             res = recommendationResource.add_recommendation(body)
-            return Response("Created!", status=201, content_type='text/plain')
+            return Response(status=201, content_type='text/plain')
     except Exception as e:
         logger.error("Error on /recommendations/<userID>", str(e))
         return Response(str(e), status=400, content_type='text/plain')
@@ -85,11 +89,15 @@ def recommendations_swiped(userID):
     try:
         check = recommendationResource.get_by_id(userID)
         if len(check) == 0:
-            return Response("User not found.", status=404, content_type="text/plain")
+            return Response(status=404, content_type="text/plain")
 
         # otherwise, user exists, get data we want
-        res = recommendationResource.get_by_swiped(userID)
-        return Response(json.dumps(res), status=200, content_type='application/json')
+        data = recommendationResource.get_by_swiped(userID)
+        response = recommendationResource.construct_response(data,
+                                                             request.args,
+                                                             request.path,
+                                                             request.full_path)
+        return Response(json.dumps(response), status=200, content_type='application/json')
     except Exception as e:
         logger.error("Error on /recommendations/<userID>/swipedYes", str(e))
         return Response(str(e), status=500, content_type="text/plain")
