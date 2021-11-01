@@ -65,7 +65,8 @@ class RDBService:
 
         terms = []
         args = []
-        pagination_str = ""
+        offset_str = ""
+        limit_str = ""
         clause = None
 
         if template is None or template == {}:
@@ -74,16 +75,19 @@ class RDBService:
         else:
             for k, v in template.items():
 
-                if k in ["offset", "limit"]:
-                    pagination_str += k + " " + v + " "
+                if k in ["limit"]:
+                    limit_str += k + " " + v + " "
+                elif k in ["offset"]:
+                    offset_str += k + " " + v + " "
                 else:
                     terms.append(k + "=%s")
                     args.append(v)
 
             if len(terms) == 0:
-                clause = " " + pagination_str
+                clause = " " + limit_str + " " + offset_str
             else:
-                clause = " where " + " AND ".join(terms) + " " + pagination_str
+                clause = " where " + " AND ".join(terms) \
+                         + " " + limit_str + " " + offset_str
 
         return clause, args
 
@@ -143,7 +147,7 @@ class RDBService:
         attributes = {}
 
         # if no offset given, we have result starting at first resource, no previous page
-        if template.get("offset", 0) == 0:
+        if int(template.get("offset", 0)) == 0:
             attributes["offset"] = None
             attributes["limit"] = None
             return attributes
