@@ -108,7 +108,7 @@ class recommendationResource(BaseApplicationResource):
         attributes = cls.get_prev_attributes(template)
         new_template = dict(template)
 
-        if not attributes.get("offset", None):
+        if attributes.get("offset", None) is None:
             return "None"
 
         new_template["limit"] = attributes.get("limit", 20)
@@ -142,4 +142,24 @@ class recommendationResource(BaseApplicationResource):
         query_string = "&".join(query_string)
 
         return path + "?" + query_string
-    
+
+    @classmethod
+    def construct_response(cls, data, template, path, full_path):
+
+        return {
+            "data": data,
+            "links": [
+                {
+                    "rel": "self",
+                    "href": full_path
+                },
+                {
+                    "rel": "prev",
+                    "href": cls.get_prev_link(template, path)
+                },
+                {
+                    "rel": "next",
+                    "href": cls.get_next_link(template, path)
+                }
+            ]
+        }
