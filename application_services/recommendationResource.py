@@ -121,3 +121,25 @@ class recommendationResource(BaseApplicationResource):
         query_string = "&".join(query_string)
 
         return path + "?" + query_string
+
+    @classmethod
+    def get_next_link(cls, template, path):
+
+        # getting limit and offset
+        attributes = cls.get_next_attributes(template)
+        new_template = dict(template)
+
+        if not attributes.get("offset", None):
+            return "None"
+
+        new_template["limit"] = attributes["limit"]
+        new_template["offset"] = attributes["offset"]
+
+        query_string = []
+        for key, value in new_template.items():
+            query_string.append(str(key) + "=" + str(value))
+
+        query_string = "&".join(query_string)
+
+        return path + "?" + query_string
+    
