@@ -100,3 +100,24 @@ class recommendationResource(BaseApplicationResource):
     @classmethod
     def get_next_attributes(cls, template):
         return RDBService.get_next_attributes(template)
+
+    @classmethod
+    def get_prev_link(cls, template, path):
+
+        # getting limit and offset
+        attributes = cls.get_prev_attributes(template)
+        new_template = dict(template)
+
+        if not attributes.get("offset", None):
+            return "None"
+
+        new_template["limit"] = attributes.get("limit", 20)
+        new_template["offset"] = attributes.get("offset")
+
+        query_string = []
+        for key, value in new_template.items():
+            query_string.append(str(key) + "=" + str(value))
+
+        query_string = "&".join(query_string)
+
+        return path + "?" + query_string
