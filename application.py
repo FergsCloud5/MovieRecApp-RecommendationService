@@ -30,11 +30,11 @@ def before_request():
     print("before_request is running!")
     print("request.path:", request.path)
 
-    a_ok = sec.check_authentication(request.path)
-    print("a_ok:", a_ok)
-    if a_ok[0] != 200:
-        session["next_url"] = request.base_url
-        return redirect(url_for('google.login'))
+    # a_ok = sec.check_authentication(request.path)
+    # print("a_ok:", a_ok)
+    # if a_ok[0] != 200:
+    #     session["next_url"] = request.base_url
+    #     return redirect(url_for('google.login'))
 
 
 @application.after_request
@@ -69,10 +69,10 @@ def similarity():
                             status=400,
                             content_type='text/plain')
     except LookupError as e:
-        return Response(str(e), status=404, content_type='text/plain')
+        return Response("Lookup error", status=404, content_type='text/plain')
     except Exception as e:
         logger.error("Error on /similarity", str(e))
-        return Response(str(e), status=500, content_type='text/plain')
+        return Response("Internal Server Error", status=500, content_type='text/plain')
 
 
 
@@ -87,7 +87,7 @@ def recommendations():
         return Response(json.dumps(response), status=200, content_type='application/json')
     except Exception as e:
         logger.error("Error on /recommendations: ", str(e))
-        return Response(str(e), status=500, content_type='text/plain')
+        return Response("Internal Server Error", status=500, content_type='text/plain')
 
 
 @application.route("/recommendations/<userID>", methods=["GET", "POST"])
@@ -109,7 +109,19 @@ def recommendations_userID(userID):
             return Response(status=201, content_type='text/plain')
     except Exception as e:
         logger.error("Error on /recommendations/<userID>", str(e))
-        return Response(str(e), status=400, content_type='text/plain')
+        return Response("Internal Server Error", status=500, content_type='text/plain')
+
+@application.route("/recommendations/<userID>/<movieID>", methods=["DELETE"])
+def delete_recommendation(userID, movieID):
+    try:
+        res = recommendationResource.delete_rec(userID, movieID)
+        if res == 0:
+            return Response("Recommendation not found.", status=404, content_type="text/plain")
+        else:
+            return Response("Recommendation deleted.", status=204, content_type="text/plain")
+    except Exception as e:
+        logger.error("Error trying to delete recommendation: ", str(e))
+        return Response("Internal Server Error", status=500, content_type="text/plain")
 
 
 @application.route("/recommendations/<userID>/swipedYes", methods=["GET"])
@@ -128,7 +140,7 @@ def recommendations_swiped(userID):
         return Response(json.dumps(response), status=200, content_type='application/json')
     except Exception as e:
         logger.error("Error on /recommendations/<userID>/swipedYes", str(e))
-        return Response(str(e), status=500, content_type="text/plain")
+        return Response("Internal Server Error", status=500, content_type="text/plain")
 
 
 

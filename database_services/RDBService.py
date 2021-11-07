@@ -142,6 +142,15 @@ class RDBService:
         return res
 
     @classmethod
+    def delete_by_template(cls, db_schema, table_name, template):
+
+        wc, args = RDBService.get_where_clause_args(template)
+
+        sql_stmt = "delete from " + db_schema + "." + table_name + " " + wc
+        res = RDBService.run_sql(sql_stmt, args)
+        return res
+
+    @classmethod
     def get_prev_attributes(cls, template):
 
         attributes = {}

@@ -8,7 +8,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # defining global constants SQL access
 REC_SCHEMA = "recommendation_service"
-REC_TABLE  = "recommendations"
+REC_TABLE = "recommendations"
+
 
 def create_similarity():
     here = os.path.dirname(os.path.abspath(__file__))
@@ -92,6 +93,12 @@ class recommendationResource(BaseApplicationResource):
     def find_by_template(cls, template):
         template = dict(template)
         return RDBService.find_by_template(REC_SCHEMA, REC_TABLE, template)
+
+    @classmethod
+    def delete_rec(cls, userID, movieID):
+        template = {"userID": userID,
+                    "movieID": movieID}
+        return RDBService.delete_by_template(REC_SCHEMA, REC_TABLE, template)
 
     @classmethod
     def get_prev_attributes(cls, template):
