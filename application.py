@@ -2,8 +2,10 @@ import json
 import logging
 
 from application_services.recommendationResource import recommendationResource
-from flask import Flask, request, Response
+from middleware.security import Security
+from flask import Flask, request, Response, session, url_for, redirect
 from flask_cors import CORS
+from flask_login import (LoginManager, login_required)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -11,15 +13,41 @@ logger.setLevel(logging.INFO)
 
 application  = Flask(__name__)
 CORS(application)
+sec = Security()
+
+application.secret_key = "my secret"
+
+login_manager = LoginManager()
+login_manager.init_app(application)
+login_manager.login_view = 'google.login'
+
+gb = sec.get_google_blueprint()
+application.register_blueprint(gb, url_prefix="/login")
 
 
 @application.before_request
 def before_request():
-    print("This is the request path:", request.path)
-    return
+    print("before_request is running!")
+    print("request.path:", request.path)
+
+    a_ok = sec.check_authentication(request.path)
+    print("a_ok:", a_ok)
+    if a_ok[0] != 200:
+        session["next_url"] = request.base_url
+        return redirect(url_for('google.login'))
+
+
+@application.after_request
+def after_request(response):
+    return response
+
 
 @application.route("/", methods=["GET"])
 def home():
+    next_url = session.get("next_url", None)
+    if next_url:
+        session.pop("next_url", None)
+        return redirect(next_url)
     return "Hello, welcome to the recommendation service!"
 
 

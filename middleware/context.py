@@ -31,3 +31,10 @@ def get_db_info():
         }
 
     return db_info
+
+def get_google_info():
+
+    google_id = os.environ.get("GOOGLE_ID", None)
+    google_secret = os.environ.get("GOOGLE_SECRET", None)
+
+    return google_id, google_secret
