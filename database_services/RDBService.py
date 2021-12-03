@@ -142,6 +142,26 @@ class RDBService:
         return res
 
     @classmethod
+    def update(cls, db_schema, table_name, update_data, id):
+
+        cols = []
+        args = []
+
+        for k, v in update_data.items():
+            cols.append(k)
+            args.append(v)
+
+        sql_stmt = "update " + db_schema + "." + table_name + " set "
+        for i in range(len(cols)):
+            sql_stmt += cols[i] + "=%s"
+            if i != len(cols) - 1:
+                sql_stmt += ", "
+        sql_stmt += " where " + table_name + "ID = " + id
+
+        res = RDBService.run_sql(sql_stmt, args)
+        return res
+
+    @classmethod
     def delete_by_template(cls, db_schema, table_name, template):
 
         wc, args = RDBService.get_where_clause_args(template)

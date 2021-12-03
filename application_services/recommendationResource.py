@@ -95,6 +95,32 @@ class recommendationResource(BaseApplicationResource):
         return RDBService.find_by_template(REC_SCHEMA, REC_TABLE, template)
 
     @classmethod
+    def update(cls, db_schema, table_name, update_data, userID, movieID):
+
+        cols = []
+        args = []
+
+        for k, v in update_data.items():
+            cols.append(k)
+            args.append(v)
+
+        sql_stmt = "update " + db_schema + "." + table_name + " set "
+        for i in range(len(cols)):
+            sql_stmt += cols[i] + "=%s"
+            if i != len(cols) - 1:
+                sql_stmt += ", "
+        sql_stmt += " where userID=" + str(userID) + " and movieID='" + str(movieID) + "'"
+
+        res = RDBService.run_sql(sql_stmt, args)
+        return res
+
+    @classmethod
+    def update_rec(cls, updatedRec):
+        userID = updatedRec["userID"]
+        movieID = updatedRec["movieID"]
+        return cls.update(REC_SCHEMA, REC_TABLE, updatedRec, userID, movieID)
+
+    @classmethod
     def delete_rec(cls, userID, movieID):
         template = {"userID": userID,
                     "movieID": movieID}

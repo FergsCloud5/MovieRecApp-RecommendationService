@@ -24,6 +24,7 @@ login_manager.login_view = 'google.login'
 gb = sec.get_google_blueprint()
 application.register_blueprint(gb, url_prefix="/login")
 
+# zip -r -X Archive.zip *
 
 @application.before_request
 def before_request():
@@ -96,7 +97,7 @@ def recommendations_userID(userID):
         if request.method == "GET":
             data = recommendationResource.get_by_id(userID)
             if len(data) == 0:
-                return Response(status=404, content_type='text/plain')
+                return Response(status=404)
 
             # if we get here, we found a user
             response = {"data": data}
@@ -111,16 +112,40 @@ def recommendations_userID(userID):
         logger.error("Error on /recommendations/<userID>", str(e))
         return Response("Internal Server Error", status=500, content_type='text/plain')
 
-@application.route("/recommendations/<userID>/<movieID>", methods=["DELETE"])
+@application.route("/recommendations/<userID>/<movieID>", methods=["GET", "PUT", "DELETE"])
 def delete_recommendation(userID, movieID):
     try:
-        res = recommendationResource.delete_rec(userID, movieID)
-        if res == 0:
-            return Response("Recommendation not found.", status=404, content_type="text/plain")
-        else:
-            return Response("Recommendation deleted.", status=204, content_type="text/plain")
+        if request.method == "GET":
+            template = {"userID": userID, "movieID": movieID}
+            data = recommendationResource.find_by_template(template)
+            if len(data) == 0:
+                return Response(status=404)
+
+            # if we get here, we found a recommendation
+            response = {"data": data}
+            return Response(json.dumps(response), status=200, content_type="application/json")
+        elif request.method == "PUT":
+            updatedRec = request.get_json()
+            template = {"userID": updatedRec["userID"], "movieID": updatedRec["movieID"]}
+            res = recommendationResource.find_by_template(template)
+            if len(res) == 0:
+                return Response("Recommendation not found.", status=404, content_type="text/plain")
+            else:
+                res = recommendationResource.update_rec(updatedRec)
+                location = "/recommendations/" + str(updatedRec["userID"]) + "/" + str(updatedRec["movieID"])
+                response = {
+                    "status": "200",
+                    "location": location
+                }
+                return Response(json.dumps(response), status=200, content_type="application/json")
+        elif request.method == "DELETE":
+            res = recommendationResource.delete_rec(userID, movieID)
+            if res == 0:
+                return Response("Recommendation not found.", status=404, content_type="text/plain")
+            else:
+                return Response("Recommendation deleted.", status=204, content_type="text/plain")
     except Exception as e:
-        logger.error("Error trying to delete recommendation: ", str(e))
+        logger.error("Error: ", str(e))
         return Response("Internal Server Error", status=500, content_type="text/plain")
 
 
